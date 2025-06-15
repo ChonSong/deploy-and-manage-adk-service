@@ -22,10 +22,7 @@ from fastapi import FastAPI
 load_dotenv()
 from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import logging as google_cloud_logging
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider, export
 
-from utils.tracing import CloudTraceLoggingSpanExporter
 from utils.typing import Feedback
 
 logging_client = google_cloud_logging.Client()
@@ -37,11 +34,7 @@ AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 session_uri = os.getenv("SESSION_SERVICE_URI", None)
 
 # Prepare arguments for get_fast_api_app
-app_args = {
-    "agents_dir": AGENT_DIR,
-    "web": True,
-    "trace_to_cloud": True
-}
+app_args = {"agents_dir": AGENT_DIR, "web": True, "trace_to_cloud": True}
 
 # Only include session_service_uri if it's provided
 if session_uri:

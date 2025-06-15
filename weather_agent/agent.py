@@ -23,7 +23,7 @@ from google.adk.agents import Agent
 
 # Load environment variables from .env file in root directory
 root_dir = Path(__file__).parent.parent
-dotenv_path = root_dir / '.env'
+dotenv_path = root_dir / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
 # Use default project from credentials if not in .env
