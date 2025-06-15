@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from google.adk.cli.fast_api import get_fast_api_app
+from pydantic import BaseModel
+from typing import Literal
 from google.cloud import logging as google_cloud_logging
 
-from utils.typing import Feedback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,9 +40,10 @@ app_args = {"agents_dir": AGENT_DIR, "web": True, "trace_to_cloud": True}
 if session_uri:
     app_args["session_service_uri"] = session_uri
 else:
-    logging.warning(
+    logger.log_text(
         "SESSION_SERVICE_URI not provided. Using in-memory session service instead. "
-        "All sessions will be lost when the server restarts."
+        "All sessions will be lost when the server restarts.",
+        severity="WARNING",
     )
 
 # Create FastAPI app with appropriate arguments
@@ -50,6 +51,17 @@ app: FastAPI = get_fast_api_app(**app_args)
 
 app.title = "weather-agent"
 app.description = "API for interacting with the Agent weather-agent"
+
+
+class Feedback(BaseModel):
+    """Represents feedback for a conversation."""
+
+    score: int | float
+    text: str | None = ""
+    invocation_id: str
+    log_type: Literal["feedback"] = "feedback"
+    service_name: Literal["weather-agent"] = "weather-agent"
+    user_id: str = ""
 
 
 @app.post("/feedback")

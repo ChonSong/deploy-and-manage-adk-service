@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import os
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import google.auth
 from dotenv import load_dotenv
 from google.adk.agents import Agent
+from google.cloud import logging as google_cloud_logging
 
 # Load environment variables from .env file in root directory
 root_dir = Path(__file__).parent.parent
@@ -32,43 +31,55 @@ os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
-
-def get_weather(query: str) -> str:
-    """Simulates a web search. Use it get information on weather.
-
-    Args:
-        query: A string containing the location to get weather information for.
-
-    Returns:
-        A string with the simulated weather information for the queried location.
-    """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        return "It's 60 degrees and foggy."
-    return "It's 90 degrees and sunny."
+logging_client = google_cloud_logging.Client()
+logger = logging_client.logger("weather-agent")
 
 
-def get_current_time(query: str) -> str:
-    """Simulates getting the current time for a city.
+def get_weather(city: str) -> dict:
+    """Retrieves the current weather report for a specified city.
 
     Args:
-        city: The name of the city to get the current time for.
+        city (str): The name of the city (e.g., "New York", "London", "Tokyo").
 
     Returns:
-        A string with the current time information.
+        dict: A dictionary containing the weather information.
+              Includes a 'status' key ('success' or 'error').
+              If 'success', includes a 'report' key with weather details.
+              If 'error', includes an 'error_message' key.
     """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        tz_identifier = "America/Los_Angeles"
+    logger.log_text(
+        f"--- Tool: get_weather called for city: {city} ---", severity="INFO"
+    )  # Log tool execution
+    city_normalized = city.lower().replace(" ", "")  # Basic normalization
+
+    # Mock weather data
+    mock_weather_db = {
+        "newyork": {
+            "status": "success",
+            "report": "The weather in New York is sunny with a temperature of 25°C.",
+        },
+        "london": {
+            "status": "success",
+            "report": "It's cloudy in London with a temperature of 15°C.",
+        },
+        "tokyo": {
+            "status": "success",
+            "report": "Tokyo is experiencing light rain and a temperature of 18°C.",
+        },
+    }
+
+    if city_normalized in mock_weather_db:
+        return mock_weather_db[city_normalized]
     else:
-        return f"Sorry, I don't have timezone information for query: {query}."
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+        return {
+            "status": "error",
+            "error_message": f"Sorry, I don't have weather information for '{city}'.",
+        }
 
 
 root_agent = Agent(
     name="root_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash-preview-05-20",
     instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-    tools=[get_weather, get_current_time],
+    tools=[get_weather],
 )
