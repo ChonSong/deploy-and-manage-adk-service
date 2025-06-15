@@ -17,13 +17,13 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-
-# Load environment variables from .env file
-load_dotenv()
 from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import logging as google_cloud_logging
 
 from utils.typing import Feedback
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging_client = google_cloud_logging.Client()
 logger = logging_client.logger(__name__)
