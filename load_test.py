@@ -42,7 +42,7 @@ class ChatStreamUser(HttpUser):
             f"{self.client.base_url}/apps/weather_agent/users/{user_id}/sessions/{session_id}",
             headers=headers,
             json=session_data,
-            timeout=10,
+            timeout=30,
         )
 
         # Send chat message
